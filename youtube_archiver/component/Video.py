@@ -6,6 +6,7 @@ class Video(ft.UserControl):
         super().__init__()
         self.title = title
         self.thumbnails = thumbnails
+        self.progress = ft.Text('')
 
     def build(self):
         if self.thumbnails == '':
@@ -19,6 +20,7 @@ class Video(ft.UserControl):
                 ft.Column(
                     controls=[
                         ft.Text(self.title),
+                        self.progress
                     ]
                 )
             ]
