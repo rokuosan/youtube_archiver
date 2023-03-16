@@ -6,16 +6,41 @@ from yt_dlp import YoutubeDL
 
 from youtube_archiver.component.Video import Video
 from youtube_archiver.util.Logger import Logger
-from youtube_archiver.util.progress_hook import main_hook
+
+
+pending_list = {}
+download_list = {}
+
+
+def progress_hook(d):
+    info = d['info_dict']
+    fid = info['id']
+    filename = info['title']
+    video: Video
+
+    if fid in download_list:
+        video = download_list[fid]
+    elif filename in pending_list:
+        download_list[fid] = pending_list[filename]
+        del pending_list[filename]
+        video = download_list[fid]
+    else:
+        return
+
+    if d['status'] == 'downloading':
+        video.progress.value = f"{round((float(d['downloaded_bytes']) / float(d['total_bytes_estimate'])) * 100)}"
+    elif d['status'] == 'finished':
+        video.progress.value = 'Complete!'
+        del download_list[fid]
+
+    video.progress.update()
 
 
 class YouTubeArchiver(ft.UserControl):
     YTDL_OPT = {
-        'progress_hooks': [main_hook],
+        'progress_hooks': [progress_hook],
         'logger': Logger()
     }
-
-    pending_list = {}
 
     def __init__(self):
         super().__init__()
@@ -80,7 +105,7 @@ class YouTubeArchiver(ft.UserControl):
             self.update()
 
             # Download
-            self.pending_list[info['title']] = video
+            pending_list[info['title']] = video
             print(f'{info["title"]}')
             yt.download(url)
 
