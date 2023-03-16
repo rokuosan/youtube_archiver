@@ -1,7 +1,15 @@
 import flet as ft
 
+from youtube_archiver.util.Logger import Logger
+from youtube_archiver.util.progress_hook import main_hook
+
 
 class YouTubeArchiver(ft.UserControl):
+    YTDL_OPT = {
+        'progress_hooks': [main_hook],
+        'logger': Logger()
+    }
+
     def __init__(self):
         super().__init__()
 
