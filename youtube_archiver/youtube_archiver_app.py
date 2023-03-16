@@ -1,5 +1,10 @@
 import flet as ft
+import urllib.request
 
+from glob import glob
+from yt_dlp import YoutubeDL
+
+from youtube_archiver.component.Video import Video
 from youtube_archiver.util.Logger import Logger
 from youtube_archiver.util.progress_hook import main_hook
 
@@ -9,6 +14,8 @@ class YouTubeArchiver(ft.UserControl):
         'progress_hooks': [main_hook],
         'logger': Logger()
     }
+
+    pending_list = {}
 
     def __init__(self):
         super().__init__()
@@ -41,19 +48,52 @@ class YouTubeArchiver(ft.UserControl):
         )
 
     def download_clicked(self, e):
+        # Get URL and clear text field
         url: str = self.download_url.value
+        self.download_url.value = ''
+        self.page.update()
 
+        # Validation
+        if not self.url_validation(url):
+            return
+
+        # Download
+        with YoutubeDL(self.YTDL_OPT) as yt:
+            info = yt.extract_info(url, download=False)
+            thumb_url: str = yt.sanitize_info(info)['thumbnails'].pop()['url']
+
+            # Check exists
+            files = glob(f"{info['title']}*")
+            if len(files) > 0:
+                self.page.snack_bar = ft.SnackBar(ft.Text('The video has already downloaded.'))
+                self.page.snack_bar.open = True
+                self.download_url.value = ''
+                self.page.update()
+                return
+
+            # Get thumbnails
+            urllib.request.urlretrieve(thumb_url, f"{info['title']}.png")
+
+            # Add Video
+            video = Video(info["title"], f"{info['title']}.png")
+            self.video_list.controls.append(video)
+            self.update()
+
+            # Download
+            self.pending_list[info['title']] = video
+            print(f'{info["title"]}')
+            yt.download(url)
+
+    def url_validation(self, url: str) -> bool:
         if url.replace(' ', '') == '':
             self.page.snack_bar = ft.SnackBar(ft.Text('URL is empty!'))
             self.page.snack_bar.open = True
             self.page.update()
-            return
+            return False
         elif not url.startswith('https://www.youtube.com/watch?v=') and not url.startswith('https://youtu.be/'):
             self.page.snack_bar = ft.SnackBar(ft.Text('URL is not youtube!'))
             self.page.snack_bar.open = True
             self.page.update()
-            return
+            return False
 
-        self.download_url.value = ''
-        self.page.update()
-
+        return True
