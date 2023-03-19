@@ -7,6 +7,8 @@ class Video(ft.UserControl):
         self.title = title
         self.thumbnails = thumbnails
         self.progress = ft.Text('')
+        self.indicator = ft.ProgressBar(width=200)
+        self.indicator.value = 0
 
     def build(self):
         if self.thumbnails == '':
@@ -20,7 +22,7 @@ class Video(ft.UserControl):
                 ft.Column(
                     controls=[
                         ft.Text(self.title),
-                        self.progress
+                        ft.Column([self.progress, self.indicator])
                     ]
                 )
             ]

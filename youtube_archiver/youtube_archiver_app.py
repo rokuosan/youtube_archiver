@@ -3,6 +3,7 @@ import urllib.request
 
 from glob import glob
 from yt_dlp import YoutubeDL
+from time import sleep
 
 from youtube_archiver.component.Video import Video
 from youtube_archiver.util.Logger import Logger
@@ -28,10 +29,18 @@ def progress_hook(d):
         return
 
     if d['status'] == 'downloading':
-        video.progress.value = f"{round((float(d['downloaded_bytes']) / float(d['total_bytes_estimate'])) * 100)}"
+        percent = round((float(d['downloaded_bytes']) / float(d['total_bytes_estimate'])) * 100)
+        video.progress.value = f"{percent} %"
+        video.indicator.value = percent / 100
+        video.indicator.update()
     elif d['status'] == 'finished':
         video.progress.value = 'Complete!'
         del download_list[fid]
+        video.progress.update()
+        video.indicator.visible = False
+        video.indicator.update()
+        sleep(0.4)
+        video.progress.visible = False
 
     video.progress.update()
 
@@ -77,6 +86,7 @@ class YouTubeArchiver(ft.UserControl):
         url: str = self.download_url.value
         self.download_url.value = ''
         self.page.update()
+        self.update()
 
         # Validation
         if not self.url_validation(url):
@@ -93,6 +103,7 @@ class YouTubeArchiver(ft.UserControl):
                 self.page.snack_bar = ft.SnackBar(ft.Text('The video has already downloaded.'))
                 self.page.snack_bar.open = True
                 self.download_url.value = ''
+                self.update()
                 self.page.update()
                 return
 
