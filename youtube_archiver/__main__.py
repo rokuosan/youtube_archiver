@@ -1,5 +1,5 @@
 import flet as ft
-import youtube_archiver_app as yt
+from youtube_archiver import app as yt
 
 
 def main(page: ft.Page):
