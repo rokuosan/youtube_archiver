@@ -8,3 +8,11 @@ Flet を利用したサンプルアプリケーションとして作成しまし
 
 - yt-dlp
 - FFmpeg
+
+## How to use
+
+以下のコマンドを実行してください。
+
+```bash
+$ python3 -m youtube-archiver
+```
